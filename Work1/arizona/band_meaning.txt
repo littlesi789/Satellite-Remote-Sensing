@@ -1,0 +1,7 @@
+banda1=imread('arizona/banda1.tif');%BLUE
+banda2=imread('arizona/banda2.tif');%GREEN
+banda3=imread('arizona/banda3.tif');%RED
+banda4=imread('arizona/banda4.tif');%NIR (Infrarrojo cercano)
+banda5=imread('arizona/banda5.tif');%MID IR
+banda6=imread('arizona/banda6.tif');%Thermal
+banda7=imread('arizona/banda7.tif');%MID IR
