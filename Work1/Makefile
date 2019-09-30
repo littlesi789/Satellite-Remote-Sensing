@@ -10,6 +10,9 @@ ndvi: ndvi.cpp
 ndwi: ndwi.cpp
 	$(CXX) $(CXXFLAGS) ndwi.cpp -o ndwi $(LDFLAGS)
 
+edge: edge.cpp
+	$(CXX) $(CXXFLAGS) edge.cpp -o edge $(LDFLAGS)
+
 ndvi_pmg: ndvi.cpp
 	$(CXX) $(CXXFLAGS) ndvi_pmg.cpp -o ndvi -lgdal
 

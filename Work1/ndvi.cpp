@@ -9,11 +9,16 @@
 using namespace std;
 using namespace cv;
 
+// Very small values ​​(0.1 or less) of the NDVI function correspond to empty 
+// areas of rocks, sand or snow. Moderate values ​​(from 0.2 to 0.3) represent 
+// shrubs and meadows, while large values ​​(from 0.6 to 0.8) indicate temperate 
+// and tropical forests.
+
 int main() {
     GDALAllRegister();
 
-	const char* nirFilePath = "/home/ricky/Desktop/MDP/Work1/arizona/banda4.tif";
-	const char* redFilePath = "/home/ricky/Desktop/MDP/Work1/arizona/banda3.tif";
+	const char* nirFilePath = "arizona/banda4.tif";
+	const char* redFilePath = "arizona/banda3.tif";
 	const char* outFilePath = "out_ndvi.pmg";
 
 	cout << "NIR channel filename: " << nirFilePath << endl;
@@ -46,7 +51,7 @@ int main() {
 
 	cout << "--Creating Files--" << endl;
 	// Create pmg FILE
-	Mat ndvi_image=Mat::zeros(nRows,nCols,CV_8UC1), color_image;
+	Mat ndvi_image=Mat::zeros(nRows,nCols,CV_8UC1);
     
 	
 	cout << "--Loop through pixels--" << endl;
@@ -74,9 +79,42 @@ int main() {
 			ndvi_image.at<uchar>(i,j) = extended_index; //G
 		}
 	}
+
+
+	Mat color_image, smooth_1, smooth_2, mask, step, detected_edges, detected_edges_step;
+	imwrite("ndvi_visualization.tif",ndvi_image);
 	cout << "apply color map" << endl;
-	applyColorMap( ndvi_image,color_image, COLORMAP_RAINBOW);
-	imwrite("ndvi_visualization.tif",color_image);
+	medianBlur(ndvi_image, smooth_1, 5); //Blurs an image using the median filter. Remove noise.
+	medianBlur(smooth_1, smooth_2, 9);
+	applyColorMap(smooth_1, color_image, COLORMAP_RAINBOW);
+	imwrite("ndvi_visualization_denoise_1.tif",color_image);
+	applyColorMap(smooth_2, color_image, COLORMAP_RAINBOW);
+	imwrite("ndvi_visualization_denoise_2.tif",color_image);
+	
+	// Mask different levels of NDVI and perform edge detection.
+	int lowThreshold = 0;
+	const int ratio = 3;
+	const int kernel_size = 3;
+
+	inRange(smooth_2, 153, 256, mask);
+	step = Mat::zeros(mask.size(), CV_8UC1);
+	step.setTo(100, mask == 255);
+	cout << "Write image: edge w/ 0.1 NDVI" << endl;
+	Canny(step, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
+	imwrite("ndvi_visualization_edge_100.tif",detected_edges);
+
+	inRange(smooth_2, 178, 256, mask);
+	step.setTo(180, mask == 255);
+	inRange(smooth_2, 204, 256, mask);
+	step.setTo(255, mask == 255);
+	cout << "Write image: step" << endl;
+	imwrite("ndvi_visualization_step.tif",step);
+
+	
+	Canny(step, detected_edges_step, lowThreshold, lowThreshold*ratio, kernel_size );
+	cout << "Write image: edge step" << endl;
+	imwrite("ndvi_visualization_edge_step.tif",detected_edges_step);
+
 	// delete buffers
 	CPLFree(nir_Row);
 	CPLFree(red_Row);
